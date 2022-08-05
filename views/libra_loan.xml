@@ -1,0 +1,138 @@
+<openerp>
+    <data>
+ 
+        <!-- libra.loan -->
+
+        <record model="ir.ui.view" id="libra_loan_tree">
+            <field name="name">libra.loan.tree</field>
+            <field name="model">libra.loan</field>
+            <field name="arch" type="xml">
+                <tree decoration-muted="state == 'cancelado'" decoration-danger="state in ('solicitado', 'revision', 'autorizado')" 
+                    decoration-success="state == 'pagado'" decoration-warning="state == 'acreditacion_pendiente'" limit="15">
+                    <field name="create_date" string="Creado"/>
+                    <field name="partner_id"/>
+                    <field name="fecha"/>
+                    <field name="name"/>
+                    <field name="sucursal_id"/>
+                    <field name="state"/>
+                    <field name="company_id" groups="base.group_erp_manager"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Filter Tree Prestamos -->
+
+        <record model="ir.ui.view" id="libra_loan_filter">
+        <field name="name">libra.loan.filter</field>
+        <field name="model">libra.loan</field>
+        <field name="arch" type="xml">
+            <search>
+            <filter string="Solicitado" name="solicitado" domain="[('state','=', 'solicitado')]"/>
+            <filter string="Revision" name="revision" domain="[('state','=', 'revision')]"/>
+            <filter string="Autorizado" name="autorizado" domain="[('state','=', 'autorizado')]"/>
+            <filter string="Acreditacion Pendiente" name="acreditacion_pendiente" domain="[('state','=', 'acreditacion_pendiente')]"/>
+            <filter string="Acreditado" name="acreditado" domain="[('state','=', 'acreditado')]"/>
+            <filter string="Precancelado" name="precancelado" domain="[('state','=', 'precancelado')]"/>
+            <filter string="Refinanciado" name="refinanciado" domain="[('state','=', 'refinanciado')]"/>
+            <filter string="Pagado" name="pagado" domain="[('state','=', 'pagado')]"/>
+            <filter string="Cancelado" name="cancelado" domain="[('state','=', 'cancelado')]"/>
+            <separator/>
+            <filter string="Pendientes de accion" name="pendientes" domain="[('state','in', ('solicitado', 'revision', 'autorizado', 'acreditacion_pendiente'))]"/>
+            <separator/>
+            <field name="partner_id"/>
+            <field name="name"/>
+            <field name="fecha"/>
+            <field name="sucursal_id"/>
+            <field name="create_uid"/>
+            </search>
+        </field>
+        </record>
+
+        <!-- Form Loan -->
+
+        <record id="libra_loan_form" model="ir.ui.view">
+            <field name="name">libra.loan.form</field>
+            <field name="model">libra.loan</field>
+            <field name="priority">5</field>
+            <field name="arch" type="xml">
+                <form string="Prestamo">
+                    <header>
+                    <field name="state" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <script>
+                            $(document).ready(function(){
+                                $('.oe_form_sheet_width').css({'background-color': 'gainsboro'});
+                            });
+                        </script>
+                        <group col="3">
+                            <group col="1">
+                                <group string="Informacion principal" col="2">
+                                    <field name="name" readonly="1"/>
+                                    <field name="company_id" groups="base.group_erp_manager"/>
+                                    <field name="fecha" attrs="{'readonly': [('state', '!=', 'solicitado')]}"/>
+                                    <label for="partner_id"/>
+                                    <h2>
+                                    <field name="partner_id" attrs="{'readonly': [('state', '!=', 'solicitado')]}" 
+                                        options="{'no_quick_create':True, 'search_more':False}" required="1"/>
+                                    </h2>
+                                </group>
+                            </group>
+                            <group col="1">
+                                <group string="Medio de Cobro" col="1">
+                                </group>
+                            </group>
+                            <group col="1">
+                                <group string="Datos" col="2">
+                                    <field name="currency_id" attrs="{'readonly': [('state', '!=', 'solicitado')]}" 
+                                        options="{'no_quick_create':True, 'search_more':False}"/>
+                                    <field name="sucursal_id" options="{'no_quick_create':True,'no_create_edit':True, 'no_open':True}" readonly="0" attrs="{'required': [('state', '=', 'solicitado')]}"/>
+                                </group>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Cuotas">
+                            </page>
+                            <page string="Planes">
+                            </page>
+                            <page string="Facturas de gestion">
+                            </page>
+                            <page string="Pagos al cliente">
+                            </page>
+                            <page name="documentacion" string="Documentacion">
+                            </page>
+                            <page name="requerimientos" string="Requerimientos">
+                            </page>
+                            <page name="otra_informacion" string="Otra informacion">
+                            </page>
+                    </notebook>
+                    </sheet>
+                    <footer>
+                    <!-- <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div> -->
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="libra_loan_action">
+            <field name="name">Todos los prestamos</field>
+            <field name="res_model">libra.loan</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('partner_id','!=',False)]</field>
+            <field name="view_ids" eval="[(5, 0, 0), 
+                (0, 0, {'view_mode': 'tree', 'view_id': ref('libra_loan_tree')}), 
+                (0, 0, {'view_mode': 'form', 'view_id': ref('libra_loan_form')})]"/>
+	    </record>
+
+        <menuitem name="Prestamos" id="menu_libra_loan" web_icon="libra_loan,static/description/icon.png"
+            groups="libra_loan.user"/>
+		    
+        <menuitem name="Prestamos" id="menu_libra_loan_loan" parent="menu_libra_loan"/>
+
+        <menuitem name="Todos los Prestamos" id="menu_libra_loan_loan_all_action" parent="menu_libra_loan_loan" action="libra_loan_action" sequence="0"/>
+
+    </data>
+</openerp>
